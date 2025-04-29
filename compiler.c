@@ -8,7 +8,7 @@ struct lex_process_functions compiler_lex_functions = {
     .push_char=compile_process_push_char
 };
 
-void compile_error(struct compile_process *compiler, const char *msg, ...) {
+void compiler_error(struct compile_process *compiler, const char *msg, ...) {
     va_list args;
     va_start(args, msg);
     vfprintf(stderr, msg, args);

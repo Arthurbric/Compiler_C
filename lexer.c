@@ -131,25 +131,6 @@ struct token *token_make_multiline_comment() {
     return token_create(&(struct token){.type=TOKEN_TYPE_COMMENT,.sval=buffer_ptr(buffer)});
 }
 
-struct token *handle_comment() {
-    char c = peekc();
-    if (c == '/') {
-        nextc();
-        if (peekc() == '/') {
-            nextc();
-            return token_make_one_line_comment();
-        } else if (peekc() == '*') {
-            nextc();
-            return token_make_multiline_comment();
-        }
-
-        pushc('/');
-        return token_make_operator_or_string();
-    }
-
-    return NULL;
-}
-
 static struct token *make_identifier_or_keyword() {
     struct buffer *buffer = buffer_create();
     char c;
@@ -161,7 +142,7 @@ static struct token *make_identifier_or_keyword() {
 
     if (is_keyword(buffer_ptr(buffer)))
         return token_create(&(struct token){.type=TOKEN_TYPE_KEYWORD,.sval=buffer_ptr(buffer)});
-    return token_create(&(struct token){.type=TOKEN_TYPE_KEYWORD,.sval=buffer_ptr(buffer)});
+    return token_create(&(struct token){.type=TOKEN_TYPE_IDENTIFIER,.sval=buffer_ptr(buffer)});
 }
 
 struct token *read_special_token() {
@@ -170,23 +151,6 @@ struct token *read_special_token() {
         return make_identifier_or_keyword();
 
     return NULL;
-}
-
-static struct token *token_make_operator_or_string() {
-    char op = peekc();
-
-    if (op == '<') {
-        struct token *last_token = lexer_last_token();
-        if (token_is_keyword(last_token, "include"))
-            return token_make_string('<', '>');
-    }
-
-    struct token *token = token_create(&(struct token){.type=TOKEN_TYPE_STRING,.sval=read_op()});
-    if (op = '(') {
-        lex_new_expression();
-    }
-
-    return token;
 }
 
 static void lex_new_expression() {
@@ -293,12 +257,64 @@ struct token *token_make_number() {
     return token_make_number_for_value(read_number());
 }
 
-struct token *token_make_symbol() {
-    return token_make_symbol_for_value(read_symbol());
-}
+// struct token *token_make_symbol() {
+//     return token_make_symbol_for_value(read_symbol());
+// }
 
 struct token *token_make_string() {
     return token_make_string_for_value(read_string());
+}
+
+bool token_is_keyword(struct token *last_token, char *str) {
+    struct buffer *buffer = buffer_create();
+    char c = peekc();
+    LEX_GETC_IF(buffer, c, (c >= 'a' && c <= '9'));
+
+    buffer_write(buffer, 0x00); // Finaliza a string
+
+    if (strcmp(buffer->data, str) == 0)
+        return true;
+    return false;
+}
+
+static char *read_op() {
+    return "Oi";
+}
+
+static struct token *token_make_operator_or_string() {
+    char op = peekc();
+
+    if (op == '<') {
+        struct token *last_token = lexer_last_token();
+        if (token_is_keyword(last_token, "include"))
+            return token_make_string('<', '>');
+    }
+
+    struct token *token = token_create(&(struct token){.type=TOKEN_TYPE_STRING,.sval=read_op()});
+    if (op = '(') {
+        lex_new_expression();
+    }
+
+    return token;
+}
+
+struct token *handle_comment() {
+    char c = peekc();
+    if (c == '/') {
+        nextc();
+        if (peekc() == '/') {
+            nextc();
+            return token_make_one_line_comment();
+        } else if (peekc() == '*') {
+            nextc();
+            return token_make_multiline_comment();
+        }
+
+        pushc('/');
+        return token_make_operator_or_string();
+    }
+
+    return NULL;
 }
 
 struct token *read_next_token() {

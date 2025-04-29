@@ -18,10 +18,11 @@ MAIN_OBJS = $(BUILD_DIR)/compiler.o \
 all: main
 
 main: $(MAIN_OBJS) main.c
+	mkdir -p $(BUILD_DIR)
 	$(CC) main.c $(CFLAGS) $(MAIN_OBJS) -o ./main
 
-test: $(MAIN_OBJS) test.c
-	$(CC) test.c $(CFLAGS) $(MAIN_OBJS) -o ./test
+test: $(MAIN_OBJS) ./tests/test.c
+	$(CC) ./tests/test.c $(CFLAGS) $(MAIN_OBJS) -o ./test
 	./test
 
 # Regras para objetos
@@ -34,5 +35,5 @@ $(BUILD_DIR)/$(HELPERS_DIR)/%.o: $(HELPERS_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f ./main ./test ./test_lexer ./outtest
+	rm -f ./main ./tests/test.o
 	rm -rf $(BUILD_DIR)
