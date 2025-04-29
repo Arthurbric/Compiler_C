@@ -88,6 +88,11 @@ static struct token *lexer_last_token() {
     return vector_back_or_null(lex_process->token_vec);
 }
 
+struct token *token_make_newline() {
+    nextc();
+    return token_create(&(struct token){.type=TOKEN_TYPE_NEWLINE});
+}
+
 static struct token *handle_whitespace() {
     struct token *last_token = lexer_last_token();
     if (last_token)
@@ -95,6 +100,121 @@ static struct token *handle_whitespace() {
 
     nextc();
     return read_next_token();
+}
+
+struct token *token_make_one_line_comment() {
+    struct buffer *buffer = buffer_create();
+    char c = 0;
+    LEX_GETC_IF(buffer, c, c != '\n' && c != EOF);
+
+    return token_create(&(struct token){.type=TOKEN_TYPE_COMMENT,.sval=buffer_ptr(buffer)});
+}
+
+struct token *token_make_multiline_comment() {
+    struct buffer *buffer = buffer_create();
+    char c = 0;
+    while (1) {
+        LEX_GETC_IF(buffer, c, c != '*' && c != EOF);
+
+        if (c == EOF) {
+            compiler_error(lex_process->compiler, "O comentário não foi fechado\n");
+        } else if (c == '*') {
+            nextc();
+
+            if (peekc() == '/') {
+                nextc();
+                break;
+            }
+        }
+    }
+
+    return token_create(&(struct token){.type=TOKEN_TYPE_COMMENT,.sval=buffer_ptr(buffer)});
+}
+
+struct token *handle_comment() {
+    char c = peekc();
+    if (c == '/') {
+        nextc();
+        if (peekc() == '/') {
+            nextc();
+            return token_make_one_line_comment();
+        } else if (peekc() == '*') {
+            nextc();
+            return token_make_multiline_comment();
+        }
+
+        pushc('/');
+        return token_make_operator_or_string();
+    }
+
+    return NULL;
+}
+
+static struct token *make_identifier_or_keyword() {
+    struct buffer *buffer = buffer_create();
+    char c;
+    LEX_GETC_IF(buffer, c, (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_')
+    // Não entendi ao certo porque tem dois "|| (c >= 'A' && c <= 'Z') ||"
+
+    buffer_write(buffer, 0x00);
+    printf("Token: %s\n", buffer->data);
+
+    if (is_keyword(buffer_ptr(buffer)))
+        return token_create(&(struct token){.type=TOKEN_TYPE_KEYWORD,.sval=buffer_ptr(buffer)});
+    return token_create(&(struct token){.type=TOKEN_TYPE_KEYWORD,.sval=buffer_ptr(buffer)});
+}
+
+struct token *read_special_token() {
+    char c = peekc();
+    if (isalpha(c) || c == '_')
+        return make_identifier_or_keyword();
+
+    return NULL;
+}
+
+static struct token *token_make_operator_or_string() {
+    char op = peekc();
+
+    if (op == '<') {
+        struct token *last_token = lexer_last_token();
+        if (token_is_keyword(last_token, "include"))
+            return token_make_string('<', '>');
+    }
+
+    struct token *token = token_create(&(struct token){.type=TOKEN_TYPE_STRING,.sval=read_op()});
+    if (op = '(') {
+        lex_new_expression();
+    }
+
+    return token;
+}
+
+static void lex_new_expression() {
+    lex_process->current_expression_count++;
+
+    if (lex_process->current_expression_count == 1)
+        lex_process->parentheses_buffer = buffer_create();
+}
+
+static void lex_fisish_expression() {
+    lex_process->current_expression_count--;
+
+    if (lex_process->current_expression_count < 0)
+        compiler_error(lex_process->compiler, "Você fechou uma expressão nunca iniciada!\n");
+}
+
+bool lex_is_in_expression() {
+    return lex_process->current_expression_count > 0;
+}
+
+static struct token *token_make_symbol() {
+    char c = nextc();
+    if (c == ')')
+        lex_fisish_expression();
+
+    struct token *token = token_create(&(struct token){.type=TOKEN_TYPE_SYMBOL,.cval=c});
+    printf("Token: %c\n", c);
+    return token;
 }
 
 const char *read_number_str() {
@@ -169,8 +289,6 @@ struct token *token_make_string_for_value(const char *str) {
     });
 }
 
-
-
 struct token *token_make_number() {
     return token_make_number_for_value(read_number());
 }
@@ -186,30 +304,37 @@ struct token *token_make_string() {
 struct token *read_next_token() {
     struct token *token = NULL;
     char c = peekc();
-    switch (c) 
-    {
+
+    token = handle_comment(); // Sem declaração
+    if (token) return token;
+
+    switch (c) {
     case EOF:
         break;
-    
     NUMERIC_CASE:
         token = token_make_number();
     break;
-
+    OPERATOR_CASE:
+        token = token_make_operator_or_string(); // Sem declaração
+        break;
     SYMBOL_CASE:
         token = token_make_symbol();
     break;
-
-    STRING_CASE:
-        token = token_make_string();
-    break;
-
-    case ' ':
+    case '"':
+        token = token_make_string('"', '"');
+        break;
     case '\t':
+    case ' ':
         token = handle_whitespace();
-    break;
+        break;
+    case '\n':
+        token = token_make_newline(); // Sem declaração
+        break;
 
     default:
-        //compiler_error(lex_process->compiler, "Token inválido!\n");
+        token = read_special_token();
+        if (!token)
+            compiler_error(lex_process->compiler, "Token inválido!\n");
         break;
     }
 

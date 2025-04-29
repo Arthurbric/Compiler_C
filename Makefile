@@ -2,7 +2,7 @@
 CC = gcc
 CFLAGS = -I./ -g
 BUILD_DIR = ./build
-HELPERS_DIR = helpers
+HELPERS_DIR = ./helpers
 
 # Objetos principais
 MAIN_OBJS = $(BUILD_DIR)/compiler.o \

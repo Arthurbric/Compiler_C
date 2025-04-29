@@ -1,4 +1,4 @@
-# ✨ Implementação da Análise Léxica (Lab 2)
+# ✨ Implementação da Análise Léxica (Lab 3)
 
 ## 🏫 Turma B
 
