@@ -32,6 +32,7 @@ void token_print(struct token* token) {
             break;
         case TOKEN_TYPE_STRING:
             printf("\"%s\"", token->sval);
+            break;
         case TOKEN_TYPE_SYMBOL:
             printf("\"%c\"", token->cval);
             break;
@@ -236,7 +237,7 @@ const char *read_string(char i, char j) {
 
 struct token *token_make_number_for_value(unsigned long number) {
     return token_create(&(struct token) {
-        .type=TOKEN_TYPE_SYMBOL, .llnum=number
+        .type=TOKEN_TYPE_NUMBER, .llnum=number
     });
 }
 
@@ -247,8 +248,6 @@ struct token *token_make_symbol_for_value(const char *str) {
 }
 
 struct token *token_make_string_for_value(const char *str) {
-    // Um erro misterioso acontece quando salva *str no .sval
-    // Por algum motivo a string fica toda esculhambada
     return token_create(&(struct token) {
         .type=TOKEN_TYPE_STRING, .sval=str
     });

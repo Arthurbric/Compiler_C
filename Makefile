@@ -35,5 +35,5 @@ $(BUILD_DIR)/$(HELPERS_DIR)/%.o: $(HELPERS_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f ./main ./tests/test.o
+	rm -f ./main ./tests/*.o
 	rm -rf $(BUILD_DIR)
