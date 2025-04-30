@@ -182,17 +182,31 @@ static struct token *token_make_symbol() {
     return token;
 }
 
-const char *read_number_str() {
+unsigned long long read_number_str() {
     const char *num = NULL;
     struct buffer *buffer = buffer_create();
     char c = peekc();
-    LEX_GETC_IF(buffer, c, (c >= '0' && c <= '9'));
+    char *endptr; // Por enquanto não vou usar este tratamento de erros
+
+    LEX_GETC_IF(buffer, c, (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'));
 
     buffer_write(buffer, 0x00); // Finaliza a string
-
     printf("Token (Number): %s\n", buffer->data);
 
-    return buffer_ptr(buffer);
+    // binário -> se tiver 0b
+    if (strstr(buffer->data, "0b")) {
+        return strtoll(buffer->data+2, &endptr, 2);
+    }
+
+    // hexa -> se tiver 0x
+    else if (strstr(buffer->data, "0x")) {
+        return strtoll(buffer->data+2, &endptr, 16);
+    }
+
+    // Esse +2 serve para remover os prefixos 0x e 0b
+
+
+    return atoll(buffer_ptr(buffer));
 }
 
 const char *read_symbol_str() {
@@ -221,8 +235,7 @@ const char *read_string_str(char i, char j) {
 }
 
 unsigned long long read_number() {
-    const char *s = read_number_str();
-    return atoll(s);
+    return read_number_str();
 }
 
 const char *read_symbol() {
@@ -326,6 +339,19 @@ struct token *handle_comment() {
     return NULL;
 }
 
+const char *read_number_str_bin() {
+    const char *num = NULL;
+    struct buffer *buffer = buffer_create();
+    char c = peekc();
+    LEX_GETC_IF(buffer, c, (c >= '0' && c <= '9'));
+
+    buffer_write(buffer, 0x00); // Finaliza a string
+
+    printf("Token (Number): %s\n", buffer->data);
+
+    return buffer_ptr(buffer);
+}
+
 struct token *read_next_token() {
     struct token *token = NULL;
     char c = peekc();
@@ -341,7 +367,7 @@ struct token *read_next_token() {
     break;
     OPERATOR_CASE:
         token = token_make_operator_or_string();
-        break;
+    break;
     SYMBOL_CASE:
         token = token_make_symbol();
     break;

@@ -41,13 +41,14 @@ int compile_file(const char *filename, const char *out_filename, int flags) {
     if (lex(lex_process) != LEXICAL_ANALYSIS_ALL_OK)
         return COMPILER_FAILED_WITH_ERRORS;
 
-    /*
-    Parsing do Código
-    */
+    process->token_vec = lex_process->token_vec;
 
-    /*
-    Geração de código
-    */
+    /* Parsing do Código */
+    // if (parse(process) != PARSE_ALL_OK) 
+    //     return COMPILER_FAILED_WITH_ERRORS;
+
+
+    /* Geração de código */
 
     return COMPILER_FILE_COMPILED_OK;
 }
