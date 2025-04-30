@@ -52,6 +52,8 @@
 #define COMMENT_CASE \
     case '/'
 
+#define token_is_keyword(last_token, str) (strcmp(last_token->sval, str) == 0)
+
 // Não sei se funciona, vou saber somente quando executar 😬
 #define is_keyword(keyword) ( \
     strcmp(keyword, "unsigned") == 0 || \

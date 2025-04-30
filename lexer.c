@@ -31,11 +31,12 @@ void token_print(struct token* token) {
             printf("%llu", token->llnum);
             break;
         case TOKEN_TYPE_STRING:
-        case TOKEN_TYPE_SYMBOL:
             printf("\"%s\"", token->sval);
+        case TOKEN_TYPE_SYMBOL:
+            printf("\"%c\"", token->cval);
             break;
         case TOKEN_TYPE_OPERATOR:
-            printf("'%c'", token->cval);
+            printf("'%s'", token->sval);
             break;
         default:
             printf("(valor não impresso)");
@@ -177,7 +178,6 @@ static struct token *token_make_symbol() {
         lex_fisish_expression();
 
     struct token *token = token_create(&(struct token){.type=TOKEN_TYPE_SYMBOL,.cval=c});
-    printf("Token: %c\n", c);
     return token;
 }
 
@@ -208,15 +208,14 @@ const char *read_symbol_str() {
     return buffer_ptr(buffer);
 }
 
-const char *read_string_str() {
+const char *read_string_str(char i, char j) {
     struct buffer *buffer = buffer_create();
-    char c = nextc();
-    LEX_GETC_IF(buffer, c, (isalpha(c)));
 
+    char c = nextc();
+    LEX_GETC_IF(buffer, c, (c != j));
     buffer_write(buffer, 0x00); // Finaliza a string
 
     printf("Token (String): %s\n", buffer->data);
-
     return buffer_ptr(buffer);
 }
 
@@ -230,8 +229,8 @@ const char *read_symbol() {
     return s;
 }
 
-const char *read_string() {
-    const char *s = read_string_str();
+const char *read_string(char i, char j) {
+    const char *s = read_string_str(i, j);
     return s;
 }
 
@@ -248,6 +247,8 @@ struct token *token_make_symbol_for_value(const char *str) {
 }
 
 struct token *token_make_string_for_value(const char *str) {
+    // Um erro misterioso acontece quando salva *str no .sval
+    // Por algum motivo a string fica toda esculhambada
     return token_create(&(struct token) {
         .type=TOKEN_TYPE_STRING, .sval=str
     });
@@ -261,24 +262,33 @@ struct token *token_make_number() {
 //     return token_make_symbol_for_value(read_symbol());
 // }
 
-struct token *token_make_string() {
-    return token_make_string_for_value(read_string());
-}
+struct token *token_make_string(char i, char j) {
+    const char *str = read_string(i, j);
+    nextc(); // Isso aqui quase que deixa sem dormir
 
-bool token_is_keyword(struct token *last_token, char *str) {
-    struct buffer *buffer = buffer_create();
-    char c = peekc();
-    LEX_GETC_IF(buffer, c, (c >= 'a' && c <= '9'));
-
-    buffer_write(buffer, 0x00); // Finaliza a string
-
-    if (strcmp(buffer->data, str) == 0)
-        return true;
-    return false;
+    return token_make_string_for_value(str);
 }
 
 static char *read_op() {
-    return "Oi";
+    struct buffer *buffer = buffer_create();
+    char c = peekc();
+
+    buffer_write(buffer, c);
+    nextc();
+
+    char next = peekc();
+    if ((c == '=' && next == '=') || 
+        (c == '!' && next == '=') ||  
+        (c == '<' && next == '=') ||  
+        (c == '>' && next == '=') ||  
+        (c == '&' && next == '&') ||  
+        (c == '|' && next == '|')) {  
+        buffer_write(buffer, next);
+        nextc();
+    }
+
+    buffer_write(buffer, 0x00);
+    return buffer_ptr(buffer);
 }
 
 static struct token *token_make_operator_or_string() {
@@ -290,8 +300,8 @@ static struct token *token_make_operator_or_string() {
             return token_make_string('<', '>');
     }
 
-    struct token *token = token_create(&(struct token){.type=TOKEN_TYPE_STRING,.sval=read_op()});
-    if (op = '(') {
+    struct token *token = token_create(&(struct token){.type=TOKEN_TYPE_OPERATOR,.sval=read_op()});
+    if (op == '(') {
         lex_new_expression();
     }
 
@@ -321,7 +331,7 @@ struct token *read_next_token() {
     struct token *token = NULL;
     char c = peekc();
 
-    token = handle_comment(); // Sem declaração
+    token = handle_comment();
     if (token) return token;
 
     switch (c) {
@@ -331,7 +341,7 @@ struct token *read_next_token() {
         token = token_make_number();
     break;
     OPERATOR_CASE:
-        token = token_make_operator_or_string(); // Sem declaração
+        token = token_make_operator_or_string();
         break;
     SYMBOL_CASE:
         token = token_make_symbol();
