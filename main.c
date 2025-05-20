@@ -3,35 +3,31 @@
 #include "helpers/buffer.h"
 #include "compiler.h"
 
-int main(int argc, char *argv[], char *envp[]) {
-    const char vec_arquivos[3][50] = {
-        "./tests/test1.c",
-        "./tests/test2.c",
-        "./tests/test3.c"
-    };
+int main(int argc, char const *argv[]) {
+    char *input_file = NULL;
+    char *output_file = NULL;
 
-    const char vec_arquivos_saida[3][50] = {
-        "./tests/test1.o",
-        "./tests/test2.o",
-        "./tests/test3.o"
-    };
-    
-    printf("Compiladores - Turma B - Grupo 2\n\n");
+    printf("Compiladores - TURMA B - GRUPO G2\n\n");
 
-    for (size_t i = 0; i < 3; i++) {
+    if (argc > 1) {
+        input_file = (char *) argv[1];
 
-        int res = compile_file(vec_arquivos[i], vec_arquivos_saida[i], 0);
-        if (res == COMPILER_FILE_COMPILED_OK) {
-            printf("Compilação OK!\n");
-        } else if (res == COMPILER_FAILED_WITH_ERRORS) {
-            printf("Falha na Compilação!\n");
-        } else {
-            printf("Erro desconhecido!\n");
-        }
-
-        printf("\n\n");
+        if (argc > 2) 
+            output_file = (char *) argv[2];
     }
     
+    printf("#Input file: %s \n#Output file: %s \n\n", input_file, output_file);
+
+    int res = compile_file(input_file, output_file,0);
+    if (res == COMPILER_FILE_COMPILED_OK){
+        printf("Todos os arquivos foram compilados com sucesso!\n");
+    } else if (res == COMPILER_FAILED_WITH_ERRORS){
+        printf("Erro de compilacao!\n");
+    } else {
+        printf("Erro desconhecido!\n");
+    }
 
     return 0;
 }
+
+
