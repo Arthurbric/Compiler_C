@@ -229,7 +229,7 @@ struct node
         struct node *owner;
 
         // Ponteiro para a funcao que o no esta.
-        struct node *funtion;
+        struct node *function;
     } binded;
 
     // Estrutura similar ao token

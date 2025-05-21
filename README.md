@@ -12,42 +12,27 @@
 
 ## 📖 Descrição
 
-Este laboratório tem como objetivo a **implementação da análise sintática** para um compilador. Foram criados **os nodos** e funções para manipulá-los, garantindo o correto funcionamento da parser.
+Este laboratório tem como objetivo a **implemetação da estrutura do nodo e a definição de precedência dos operadores** para um compilador. Foram criados **os nodos** e funções para manipulá-los, garantindo o correto funcionamento do parser. Também foram criados **as histórias** e funções que usam ela, possibilitando a transferência de comandos entre funções recursivas.
 
 ---
 
-## 🔑 Nodos implementados
-Os seguintes nodos foram implementados:
+## 🔑 Funções implementadas
+As seguintos funções relativas aos nodos foram implementadas:
 
--    `NODE_TYPE_EXPRESSION`
--    `NODE_TYPE_EXPRESSION_PARENTHESES`
--    `NODE_TYPE_NUMBER`
--    `NODE_TYPE_IDENTIFIER`
--    `NODE_TYPE_STRING`
--    `NODE_TYPE_VARIABLE`
--   `NODE_TYPE_VARIABLE_LIST`
--    `NODE_TYPE_FUNCTION`
--    `NODE_TYPE_BODY`
--    `NODE_TYPE_STATEMENT_RETURN`
--    `NODE_TYPE_STATEMENT_IF`
--    `NODE_TYPE_STATEMENT_ELSE`
--    `NODE_TYPE_STATEMENT_WHILE`
--    `NODE_TYPE_STATEMENT_DO_WHILE`
--    `NODE_TYPE_STATEMENT_FOR`
--    `NODE_TYPE_STATEMENT_BREAK`
--    `NODE_TYPE_STATEMENT_CONTINUE`
--    `NODE_TYPE_STATEMENT_SWITCH`
--   `NODE_TYPE_STATEMENT_CASE`
--    `NODE_TYPE_STATEMENT_DEFAULT`
--    `NODE_TYPE_STATEMENT_GOTO`
--    `NODE_TYPE_UNARY`
--    `NODE_TYPE_TENARY`
--   `NODE_TYPE_LABEL`
--    `NODE_TYPE_STRUCT`
--    `NODE_TYPE_UNION`
--    `NODE_TYPE_BRACKET`
--    `NODE_TYPE_CAST`
--    `NODE_TYPE_BLANK`
+- `node_set_vector`
+- `node_push`
+- `node_peek_or_null`
+- `node_peek`
+- `node_pop`
+- `node_peek_expressionable_or_null`
+- `node_is_expressionable`
+- `make_exp_node`
+- `node_create`  
+
+Outras estruturas relativas ao funcionamento dos nodos:
+
+- `struct history`
+- `struct expressionable_op_precedence_group`
 
 ---
 

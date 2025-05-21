@@ -63,7 +63,7 @@ static struct token *token_peek_next()
     return vector_peek_no_increment(current_process->token_vec);
 }
 
-void parse_single_token_to_node() 
+void parse_single_token_to_node()
 {
     struct token *token = token_next();
     struct node *node = NULL;
@@ -119,11 +119,11 @@ static bool parser_left_op_has_priority(const char *op_left, const char *op_righ
 
     int precedence_left = parser_get_precedence_for_operator(op_left, &group_left);
     int precedence_right = parser_get_precedence_for_operator(op_right, &group_right);
-    
+
     // Essa funcao so trata de associatividade esquerda para direita
     if (group_left->associativity == ASSOCIATIVITY_RIGHT_TO_LEFT)
         return false;
-    
+
     return precedence_left <= precedence_right;
 }
 
@@ -164,7 +164,6 @@ void parser_reorder_expression(struct node **node_out)
 
         if (parser_left_op_has_priority(node->exp.op, right_op))
         {
-
             // EX: 50*E(20+50) -> E(50*20)+50
             parser_node_shift_children_left(node);
             // Reordenar a arvore depois do shift ser realizado.
