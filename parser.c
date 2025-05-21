@@ -263,6 +263,70 @@ int parse_next()
     return 0;
 }
 
+const char* node_type_str(int type) {
+    switch(type) {
+        case NODE_TYPE_EXPRESSION: return "EXPRESSION";
+        case NODE_TYPE_EXPRESSION_PARENTHESES: return "EXPRESSION_PARENTHESES";
+        case NODE_TYPE_NUMBER: return "NUMBER";
+        case NODE_TYPE_IDENTIFIER: return "IDENTIFIER";
+        case NODE_TYPE_STRING: return "STRING";
+        case NODE_TYPE_VARIABLE: return "VARIABLE";
+        case NODE_TYPE_VARIABLE_LIST: return "VARIABLE_LIST";
+        case NODE_TYPE_FUNCTION: return "FUNCTION";
+        case NODE_TYPE_BODY: return "BODY";
+        case NODE_TYPE_STATEMENT_RETURN: return "STATEMENT_RETURN";
+        case NODE_TYPE_STATEMENT_IF: return "STATEMENT_IF";
+        case NODE_TYPE_STATEMENT_ELSE: return "STATEMENT_ELSE";
+        case NODE_TYPE_STATEMENT_WHILE: return "STATEMENT_WHILE";
+        case NODE_TYPE_STATEMENT_DO_WHILE: return "STATEMENT_DO_WHILE";
+        case NODE_TYPE_STATEMENT_FOR: return "STATEMENT_FOR";
+        case NODE_TYPE_STATEMENT_BREAK: return "STATEMENT_BREAK";
+        case NODE_TYPE_STATEMENT_CONTINUE: return "STATEMENT_CONTINUE";
+        case NODE_TYPE_STATEMENT_SWITCH: return "STATEMENT_SWITCH";
+        case NODE_TYPE_STATEMENT_CASE: return "STATEMENT_CASE";
+        case NODE_TYPE_STATEMENT_DEFAULT: return "STATEMENT_DEFAULT";
+        case NODE_TYPE_STATEMENT_GOTO: return "STATEMENT_GOTO";
+        case NODE_TYPE_UNARY: return "UNARY";
+        case NODE_TYPE_TENARY: return "TENARY";
+        case NODE_TYPE_LABEL: return "LABEL";
+        case NODE_TYPE_STRUCT: return "STRUCT";
+        case NODE_TYPE_UNION: return "UNION";
+        case NODE_TYPE_BRACKET: return "BRACKET";
+        case NODE_TYPE_CAST: return "CAST";
+        case NODE_TYPE_BLANK: return "BLANK";
+        default: return "UNKNOWN";
+    }
+}
+
+void print_ast_node(struct node* node, int depth) {
+    if (!node) return;
+    for (int i = 0; i < depth; i++) printf("  ");
+    printf("%s", node_type_str(node->type));
+    
+    if (node->type == NODE_TYPE_NUMBER) {
+        printf(" (%llu)", node->llnum);
+    } else if (node->type == NODE_TYPE_IDENTIFIER || node->type == NODE_TYPE_STRING) {
+        printf(" (\"%s\")", node->sval);
+    } else if (node->type == NODE_TYPE_EXPRESSION) {
+        printf(" [op: %s]", node->exp.op);
+    }
+    printf("\n");
+    
+    if (node->type == NODE_TYPE_EXPRESSION) {
+        print_ast_node(node->exp.left, depth + 1);
+        print_ast_node(node->exp.right, depth + 1);
+    }
+}
+
+void print_ast(struct vector* root_vec) {
+    size_t count = vector_count(root_vec);
+    printf("Árvore Sintática:\n");
+    for (size_t i = 0; i < count; i++) {
+        struct node* root = *(struct node**)vector_at(root_vec, i);
+        print_ast_node(root, 0);
+    }
+}
+
 int parse(struct compile_process *process)
 { /*LAB3: Adicionar o prototipo no compiler.h */
     current_process = process;
@@ -276,5 +340,8 @@ int parse(struct compile_process *process)
         node = node_peek();
         vector_push(process->node_tree_vec, &node);
     }
+
+    print_ast(process->node_tree_vec);
+
     return PARSE_ALL_OK;
 }

@@ -27,7 +27,7 @@ struct node* node_peek() {
 
 struct node* node_pop() {
     struct node* last_node = vector_back_ptr(node_vector);
-    struct node* last_node_root = vector_empty(node_vector) ? NULL : vector_back_ptr(node_vector_root);
+    struct node* last_node_root = vector_empty(node_vector) ? NULL : vector_back_ptr_or_null(node_vector_root);
 
     vector_pop(node_vector);
 
@@ -56,7 +56,7 @@ struct node* node_peek_expressionable_or_null() {
 void make_exp_node(struct node* node_left, struct node* node_right, const char* op) {
     assert(node_left);
     assert(node_right);
-    
+
     node_create(&(struct node){.type=NODE_TYPE_EXPRESSION,.exp.left=node_left,.exp.right=node_right,.exp.op=op});
 }
 
