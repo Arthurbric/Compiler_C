@@ -63,7 +63,7 @@ static struct token *token_peek_next()
     return vector_peek_no_increment(current_process->token_vec);
 }
 
-void parse_single_token_to_node()
+void parse_single_token_to_node() 
 {
     struct token *token = token_next();
     struct node *node = NULL;
@@ -90,7 +90,7 @@ void parse_expressionable_for_op(struct history *history, const char *op)
     parse_expressionable(history);
 }
 
-static bool parser_get_precedence_for_operator(const char *op, struct expressionable_op_precedence_group **group_out)
+static int parser_get_precedence_for_operator(const char *op, struct expressionable_op_precedence_group **group_out)
 {
     *group_out = NULL;
     for (int i = 0; i < TOTAL_OPERADOR_GROUPS; i++)
@@ -105,7 +105,6 @@ static bool parser_get_precedence_for_operator(const char *op, struct expression
             }
         }
     }
-
     return -1;
 }
 
@@ -120,11 +119,11 @@ static bool parser_left_op_has_priority(const char *op_left, const char *op_righ
 
     int precedence_left = parser_get_precedence_for_operator(op_left, &group_left);
     int precedence_right = parser_get_precedence_for_operator(op_right, &group_right);
-
+    
     // Essa funcao so trata de associatividade esquerda para direita
     if (group_left->associativity == ASSOCIATIVITY_RIGHT_TO_LEFT)
         return false;
-
+    
     return precedence_left <= precedence_right;
 }
 
@@ -132,12 +131,12 @@ void parser_node_shift_children_left(struct node *node)
 {
     assert(node->type == NODE_TYPE_EXPRESSION);
     assert(node->exp.right == NODE_TYPE_EXPRESSION);
-    
+
     const char *right_op = node->exp.right->exp.op;
     struct node *new_exp_left_node = node->exp.left;
     struct node *new_exp_right_node = node->exp.right->exp.left;
     make_exp_node(new_exp_left_node, new_exp_right_node, node->exp.op);
-    
+
     // EX: 50*E(20+50) -> E(50*20)+50
     struct node *new_left_operand = node_pop();
     struct node *new_right_operand = node->exp.right->exp.right;
@@ -149,21 +148,23 @@ void parser_node_shift_children_left(struct node *node)
 void parser_reorder_expression(struct node **node_out)
 {
     struct node *node = *node_out;
+
     // Se o node nao for do tipo expressao, finalizar.
     if (node->type != NODE_TYPE_EXPRESSION)
         return;
 
     // Se o node nao tiver filhos que sejam expressoes, finalizar.
-    if (node->exp.left != NODE_TYPE_EXPRESSION && node->exp.right && node->exp.right != NODE_TYPE_EXPRESSION)
+    if (node->exp.left->type != NODE_TYPE_EXPRESSION && node->exp.right && node->exp.right->type != NODE_TYPE_EXPRESSION)
         return;
 
-    if (node->exp.left != NODE_TYPE_EXPRESSION && node->exp.right && node->exp.right == NODE_TYPE_EXPRESSION)
+    if (node->exp.left->type != NODE_TYPE_EXPRESSION && node->exp.right && node->exp.right->type == NODE_TYPE_EXPRESSION)
     {
         const char *op = node->exp.right->exp.op;
         const char *right_op = node->exp.right->exp.op;
 
         if (parser_left_op_has_priority(node->exp.op, right_op))
         {
+
             // EX: 50*E(20+50) -> E(50*20)+50
             parser_node_shift_children_left(node);
             // Reordenar a arvore depois do shift ser realizado.
@@ -200,7 +201,7 @@ void parse_exp_normal(struct history *history)
     struct node *exp_node = node_pop();
 
     // TODO: Inserir AQUI codigo para reordenador a expressao.
-    parser_reorder_expression(&exp_node);
+    parser_reorder_expression(&exp_node); // erro severo aqui
 
     node_push(exp_node);
 }
@@ -263,66 +264,109 @@ int parse_next()
     return 0;
 }
 
-const char* node_type_str(int type) {
-    switch(type) {
-        case NODE_TYPE_EXPRESSION: return "EXPRESSION";
-        case NODE_TYPE_EXPRESSION_PARENTHESES: return "EXPRESSION_PARENTHESES";
-        case NODE_TYPE_NUMBER: return "NUMBER";
-        case NODE_TYPE_IDENTIFIER: return "IDENTIFIER";
-        case NODE_TYPE_STRING: return "STRING";
-        case NODE_TYPE_VARIABLE: return "VARIABLE";
-        case NODE_TYPE_VARIABLE_LIST: return "VARIABLE_LIST";
-        case NODE_TYPE_FUNCTION: return "FUNCTION";
-        case NODE_TYPE_BODY: return "BODY";
-        case NODE_TYPE_STATEMENT_RETURN: return "STATEMENT_RETURN";
-        case NODE_TYPE_STATEMENT_IF: return "STATEMENT_IF";
-        case NODE_TYPE_STATEMENT_ELSE: return "STATEMENT_ELSE";
-        case NODE_TYPE_STATEMENT_WHILE: return "STATEMENT_WHILE";
-        case NODE_TYPE_STATEMENT_DO_WHILE: return "STATEMENT_DO_WHILE";
-        case NODE_TYPE_STATEMENT_FOR: return "STATEMENT_FOR";
-        case NODE_TYPE_STATEMENT_BREAK: return "STATEMENT_BREAK";
-        case NODE_TYPE_STATEMENT_CONTINUE: return "STATEMENT_CONTINUE";
-        case NODE_TYPE_STATEMENT_SWITCH: return "STATEMENT_SWITCH";
-        case NODE_TYPE_STATEMENT_CASE: return "STATEMENT_CASE";
-        case NODE_TYPE_STATEMENT_DEFAULT: return "STATEMENT_DEFAULT";
-        case NODE_TYPE_STATEMENT_GOTO: return "STATEMENT_GOTO";
-        case NODE_TYPE_UNARY: return "UNARY";
-        case NODE_TYPE_TENARY: return "TENARY";
-        case NODE_TYPE_LABEL: return "LABEL";
-        case NODE_TYPE_STRUCT: return "STRUCT";
-        case NODE_TYPE_UNION: return "UNION";
-        case NODE_TYPE_BRACKET: return "BRACKET";
-        case NODE_TYPE_CAST: return "CAST";
-        case NODE_TYPE_BLANK: return "BLANK";
-        default: return "UNKNOWN";
+const char *node_type_str(int type)
+{
+    switch (type)
+    {
+    case NODE_TYPE_EXPRESSION:
+        return "EXPRESSION";
+    case NODE_TYPE_EXPRESSION_PARENTHESES:
+        return "EXPRESSION_PARENTHESES";
+    case NODE_TYPE_NUMBER:
+        return "NUMBER";
+    case NODE_TYPE_IDENTIFIER:
+        return "IDENTIFIER";
+    case NODE_TYPE_STRING:
+        return "STRING";
+    case NODE_TYPE_VARIABLE:
+        return "VARIABLE";
+    case NODE_TYPE_VARIABLE_LIST:
+        return "VARIABLE_LIST";
+    case NODE_TYPE_FUNCTION:
+        return "FUNCTION";
+    case NODE_TYPE_BODY:
+        return "BODY";
+    case NODE_TYPE_STATEMENT_RETURN:
+        return "STATEMENT_RETURN";
+    case NODE_TYPE_STATEMENT_IF:
+        return "STATEMENT_IF";
+    case NODE_TYPE_STATEMENT_ELSE:
+        return "STATEMENT_ELSE";
+    case NODE_TYPE_STATEMENT_WHILE:
+        return "STATEMENT_WHILE";
+    case NODE_TYPE_STATEMENT_DO_WHILE:
+        return "STATEMENT_DO_WHILE";
+    case NODE_TYPE_STATEMENT_FOR:
+        return "STATEMENT_FOR";
+    case NODE_TYPE_STATEMENT_BREAK:
+        return "STATEMENT_BREAK";
+    case NODE_TYPE_STATEMENT_CONTINUE:
+        return "STATEMENT_CONTINUE";
+    case NODE_TYPE_STATEMENT_SWITCH:
+        return "STATEMENT_SWITCH";
+    case NODE_TYPE_STATEMENT_CASE:
+        return "STATEMENT_CASE";
+    case NODE_TYPE_STATEMENT_DEFAULT:
+        return "STATEMENT_DEFAULT";
+    case NODE_TYPE_STATEMENT_GOTO:
+        return "STATEMENT_GOTO";
+    case NODE_TYPE_UNARY:
+        return "UNARY";
+    case NODE_TYPE_TENARY:
+        return "TENARY";
+    case NODE_TYPE_LABEL:
+        return "LABEL";
+    case NODE_TYPE_STRUCT:
+        return "STRUCT";
+    case NODE_TYPE_UNION:
+        return "UNION";
+    case NODE_TYPE_BRACKET:
+        return "BRACKET";
+    case NODE_TYPE_CAST:
+        return "CAST";
+    case NODE_TYPE_BLANK:
+        return "BLANK";
+    default:
+        return "UNKNOWN";
     }
 }
 
-void print_ast_node(struct node* node, int depth) {
-    if (!node) return;
-    for (int i = 0; i < depth; i++) printf("  ");
+void print_ast_node(struct node *node, int depth)
+{
+    if (!node)
+        return;
+    for (int i = 0; i < depth; i++)
+        printf("  ");
     printf("%s", node_type_str(node->type));
-    
-    if (node->type == NODE_TYPE_NUMBER) {
+
+    if (node->type == NODE_TYPE_NUMBER)
+    {
         printf(" (%llu)", node->llnum);
-    } else if (node->type == NODE_TYPE_IDENTIFIER || node->type == NODE_TYPE_STRING) {
+    }
+    else if (node->type == NODE_TYPE_IDENTIFIER || node->type == NODE_TYPE_STRING)
+    {
         printf(" (\"%s\")", node->sval);
-    } else if (node->type == NODE_TYPE_EXPRESSION) {
+    }
+    else if (node->type == NODE_TYPE_EXPRESSION)
+    {
         printf(" [op: %s]", node->exp.op);
     }
     printf("\n");
-    
-    if (node->type == NODE_TYPE_EXPRESSION) {
+
+    if (node->type == NODE_TYPE_EXPRESSION)
+    {
         print_ast_node(node->exp.left, depth + 1);
         print_ast_node(node->exp.right, depth + 1);
     }
 }
 
-void print_ast(struct vector* root_vec) {
+void print_ast(struct vector *root_vec)
+{
     size_t count = vector_count(root_vec);
     printf("Árvore Sintática:\n");
-    for (size_t i = 0; i < count; i++) {
-        struct node* root = *(struct node**)vector_at(root_vec, i);
+    for (size_t i = 0; i < count; i++)
+    {
+        struct node *root = *(struct node **)vector_at(root_vec, i);
         print_ast_node(root, 0);
     }
 }
