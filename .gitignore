@@ -1,5 +1,6 @@
 .vscode
-build/
+build/*.o
+build/helpers/*.o
 main
 tests/*.o
 test
