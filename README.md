@@ -23,7 +23,7 @@ This project is a simple compiler built from scratch using the C programming lan
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/your-username/custom-compiler.git
+   git clone https://github.com/Arthurbric/Compiler_C.git
    cd custom-compiler
    ```
 
@@ -49,6 +49,3 @@ For questions or contributions, feel free to reach out:
 
 * Email: [arthurarash.bric@gmail.com](mailto:arthurarash.bric@gmail.com)
 
----
-
-Feel free to
